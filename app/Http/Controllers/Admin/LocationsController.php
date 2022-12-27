@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Location;
+use App\Services\LocationService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use App\Repositories\LocationRepository;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,13 +17,20 @@ class LocationsController extends Controller
 {
     use MediaUploadingTrait;
 
+    private LocationService $locationService;
+    private LocationRepository $locationRepository;
+
+    public function __construct(LocationService $locationService, LocationRepository $locationRepository)
+    {
+        $this->locationService = $locationService;
+        $this->locationRepository = $locationRepository;
+    }
+
     public function index()
     {
         abort_if(Gate::denies('location_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $locations = Location::all();
-
-        return view('admin.locations.index', compact('locations'));
+        return view('admin.locations.index', ['locations' => Location::all()]);
     }
 
     public function create()
@@ -33,12 +42,11 @@ class LocationsController extends Controller
 
     public function store(StoreLocationRequest $request)
     {
-        $location = Location::create($request->validated());
-
-        if ($request->input('photo', false)) {
-            $location->addMedia(storage_path('tmp/uploads/' . $request->input('photo')))->toMediaCollection('photo');
+        try {
+            $this->locationService->store($request);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
         }
-
         return redirect()->route('admin.locations.index');
     }
 
@@ -51,16 +59,11 @@ class LocationsController extends Controller
 
     public function update(UpdateLocationRequest $request, Location $location)
     {
-        $location->update($request->validated());
-
-        if ($request->input('photo', false)) {
-            if (!$location->photo || $request->input('photo') !== $location->photo->file_name) {
-                $location->addMedia(storage_path('tmp/uploads/' . $request->input('photo')))->toMediaCollection('photo');
-            }
-        } elseif ($location->photo) {
-            $location->photo->delete();
+        try {
+            $this->locationService->update($request, $location);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
         }
-
         return redirect()->route('admin.locations.index');
     }
 
@@ -74,7 +77,6 @@ class LocationsController extends Controller
     public function destroy(Location $location)
     {
         abort_if(Gate::denies('location_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
         $location->delete();
 
         return back();
@@ -82,7 +84,7 @@ class LocationsController extends Controller
 
     public function massDestroy(MassDestroyLocationRequest $request)
     {
-        Location::whereIn('id', request('ids'))->delete();
+        $this->locationService->removeMany(request('ids'));
 
         return response(null, Response::HTTP_NO_CONTENT);
     }

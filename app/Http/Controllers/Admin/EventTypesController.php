@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\EventType;
+use App\Services\EventService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use App\Repositories\EventRepository;
 use App\Http\Requests\StoreEventTypeRequest;
 use App\Http\Requests\UpdateEventTypeRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,6 +16,15 @@ use App\Http\Controllers\Traits\MediaUploadingTrait;
 class EventTypesController extends Controller
 {
     use MediaUploadingTrait;
+
+    private EventService $eventService;
+    private EventRepository $eventRepository;
+
+    public function __construct(EventService $eventService, EventRepository $eventRepository)
+    {
+        $this->eventService = $eventService;
+        $this->eventRepository = $eventRepository;
+    }
 
     public function index()
     {
@@ -33,12 +44,11 @@ class EventTypesController extends Controller
 
     public function store(StoreEventTypeRequest $request)
     {
-        $eventType = EventType::create($request->validated());
-
-        if ($request->input('photo', false)) {
-            $eventType->addMedia(storage_path('tmp/uploads/' . $request->input('photo')))->toMediaCollection('photo');
+        try {
+            $this->eventService->store($request);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
         }
-
         return redirect()->route('admin.event-types.index');
     }
 
@@ -51,14 +61,10 @@ class EventTypesController extends Controller
 
     public function update(UpdateEventTypeRequest $request, EventType $eventType)
     {
-        $eventType->update($request->validated());
-
-        if ($request->input('photo', false)) {
-            if (!$eventType->photo || $request->input('photo') !== $eventType->photo->file_name) {
-                $eventType->addMedia(storage_path('tmp/uploads/' . $request->input('photo')))->toMediaCollection('photo');
-            }
-        } elseif ($eventType->photo) {
-            $eventType->photo->delete();
+        try {
+            $this->eventService->update($request, $eventType);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
         }
 
         return redirect()->route('admin.event-types.index');
@@ -82,7 +88,7 @@ class EventTypesController extends Controller
 
     public function massDestroy(MassDestroyEventTypeRequest $request)
     {
-        EventType::whereIn('id', $request->ids)->delete();
+        $this->eventService->removeMany($request->ids);
 
         return response(null, Response::HTTP_NO_CONTENT);
     }

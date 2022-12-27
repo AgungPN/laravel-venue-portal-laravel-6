@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Role;
-use App\Permission;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
