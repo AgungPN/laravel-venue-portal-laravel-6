@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\EventType;
 use App\Location;
+use App\Repositories\VenueRepository;
+use App\Services\VenueService;
 use App\Venue;
 
 class HomeController extends Controller
@@ -16,9 +18,8 @@ class HomeController extends Controller
         $eventTypes = EventType::all();
         $locations = Location::all();
 
-        $newestVenues = Venue::with('event_types')->latest()->take(3)->get();
+        $newestVenues = (new VenueRepository())->take(3);
 
         return view('home', compact('featuredVenues', 'eventTypes', 'locations', 'newestVenues'));
     }
-
 }
