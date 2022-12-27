@@ -9,3 +9,8 @@
 -   Run **php artisan migrate --seed** (it has some seeded data for your testing)
 -   That's it: launch the main URL.
 -   You can login to adminpanel by going go `/login` URL and login with credentials __admin@admin.com__ - **password**
+
+## structure dev
+
+-   Desain Pattern (repository and service pattern)
+-   Laravel Duck (Testing)
