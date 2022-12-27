@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Role;
 use App\Permission;
-use Illuminate\Http\Request;
+use App\Services\RoleService;
 use App\Http\Controllers\Controller;
+use App\Repositories\RoleRepository;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
@@ -14,22 +15,31 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RolesController extends Controller
 {
+
+    private RoleService $roleService;
+    private RoleRepository $roleRepository;
+    private Permission $permissions;
+
+    public function __construct(RoleService $roleService, RoleRepository $roleRepository)
+    {
+        $this->roleService = $roleService;
+        $this->roleRepository = $roleRepository;
+
+        $this->permissions = $this->roleRepository->getPermissions();
+    }
+
     public function index()
     {
         abort_if(Gate::denies('role_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $roles = Role::all();
-
-        return view('admin.roles.index', compact('roles'));
+        return view('admin.roles.index', ['roles' => Role::all()]);
     }
 
     public function create()
     {
         abort_if(Gate::denies('role_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $permissions = Permission::all()->pluck('title', 'id');
-
-        return view('admin.roles.create', compact('permissions'));
+        return view('admin.roles.create', ['permissions' => $this->permissions]);
     }
 
     public function store(StoreRoleRequest $request)
@@ -44,11 +54,12 @@ class RolesController extends Controller
     {
         abort_if(Gate::denies('role_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $permissions = Permission::all()->pluck('title', 'id');
-
         $role->load('permissions');
 
-        return view('admin.roles.edit', compact('permissions', 'role'));
+        return view('admin.roles.edit', [
+            'permissions' => $this->permissions,
+            'role' => $role
+        ]);
     }
 
     public function update(UpdateRoleRequest $request, Role $role)

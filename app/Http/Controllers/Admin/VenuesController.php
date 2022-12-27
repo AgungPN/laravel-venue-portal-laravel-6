@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Venue;
 use App\Location;
 use App\EventType;
+use App\Services\VenueService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use App\Repositories\VenueRepository;
 use App\Http\Requests\StoreVenueRequest;
 use App\Http\Requests\UpdateVenueRequest;
 use App\Http\Requests\MassDestroyVenueRequest;
@@ -16,6 +18,20 @@ use App\Http\Controllers\Traits\MediaUploadingTrait;
 class VenuesController extends Controller
 {
     use MediaUploadingTrait;
+
+    private VenueService $venueService;
+    private VenueRepository $venueRepository;
+    private Location $locations;
+    private EventType $event_types;
+
+    public function __construct(VenueService $venueService, VenueRepository $venueRepository)
+    {
+        $this->venueService = $venueService;
+        $this->venueRepository = $venueRepository;
+
+        $this->locations = $this->venueRepository->getLocations();
+        $this->event_types = $this->venueRepository->getEventType();
+    }
 
     public function index()
     {
@@ -30,24 +46,18 @@ class VenuesController extends Controller
     {
         abort_if(Gate::denies('venue_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $locations = Location::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        $event_types = EventType::all()->pluck('name', 'id');
-
-        return view('admin.venues.create', compact('locations', 'event_types'));
+        return view('admin.venues.create', [
+            'locations' => $this->locations,
+            'event_types' => $this->event_types
+        ]);
     }
 
     public function store(StoreVenueRequest $request)
     {
-        $venue = Venue::create($request->all());
-        $venue->event_types()->sync($request->input('event_types', []));
-
-        if ($request->input('main_photo', false)) {
-            $venue->addMedia(storage_path('tmp/uploads/' . $request->input('main_photo')))->toMediaCollection('main_photo');
-        }
-
-        foreach ($request->input('gallery', []) as $file) {
-            $venue->addMedia(storage_path('tmp/uploads/' . $file))->toMediaCollection('gallery');
+        try {
+            $this->venueService->store($request);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
         }
 
         return redirect()->route('admin.venues.index');
@@ -57,42 +67,21 @@ class VenuesController extends Controller
     {
         abort_if(Gate::denies('venue_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $locations = Location::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
-
-        $event_types = EventType::all()->pluck('name', 'id');
-
         $venue->load('location', 'event_types');
 
-        return view('admin.venues.edit', compact('locations', 'event_types', 'venue'));
+        return view('admin.venues.edit', [
+            'locations' => $this->locations,
+            'event_types' => $this->event_types,
+            'venue' => $venue
+        ]);
     }
 
     public function update(UpdateVenueRequest $request, Venue $venue)
     {
-        $venue->update($request->all());
-        $venue->event_types()->sync($request->input('event_types', []));
-
-        if ($request->input('main_photo', false)) {
-            if (!$venue->main_photo || $request->input('main_photo') !== $venue->main_photo->file_name) {
-                $venue->addMedia(storage_path('tmp/uploads/' . $request->input('main_photo')))->toMediaCollection('main_photo');
-            }
-        } elseif ($venue->main_photo) {
-            $venue->main_photo->delete();
-        }
-
-        if (count($venue->gallery) > 0) {
-            foreach ($venue->gallery as $media) {
-                if (!in_array($media->file_name, $request->input('gallery', []))) {
-                    $media->delete();
-                }
-            }
-        }
-
-        $media = $venue->gallery->pluck('file_name')->toArray();
-
-        foreach ($request->input('gallery', []) as $file) {
-            if (count($media) === 0 || !in_array($file, $media)) {
-                $venue->addMedia(storage_path('tmp/uploads/' . $file))->toMediaCollection('gallery');
-            }
+        try {
+            $this->venueService->update($request, $venue);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
         }
 
         return redirect()->route('admin.venues.index');
@@ -118,8 +107,7 @@ class VenuesController extends Controller
 
     public function massDestroy(MassDestroyVenueRequest $request)
     {
-        Venue::whereIn('id', request('ids'))->delete();
-
+        $this->venueRepository->deleteIn(request('ids'));
         return response(null, Response::HTTP_NO_CONTENT);
     }
 }

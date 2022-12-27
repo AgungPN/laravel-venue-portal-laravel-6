@@ -2,8 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Location;
 use App\Venue;
+use App\Location;
+use App\EventType;
 
 class VenueRepository
 {
@@ -29,5 +30,20 @@ class VenueRepository
     public function take(int $take)
     {
         return Venue::with('event_types')->latest()->take($take)->get();
+    }
+
+    public function deleteIn(...$ids)
+    {
+        return Venue::whereIn('id', $ids)->delete();
+    }
+
+    public function getEventType()
+    {
+        return EventType::all()->pluck('name', 'id');
+    }
+
+    public function getLocations()
+    {
+        return Location::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
     }
 }
