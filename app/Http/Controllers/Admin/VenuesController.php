@@ -14,6 +14,7 @@ use App\Http\Requests\UpdateVenueRequest;
 use App\Http\Requests\MassDestroyVenueRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Controllers\Traits\MediaUploadingTrait;
+use Illuminate\Support\Collection;
 
 class VenuesController extends Controller
 {
@@ -21,8 +22,8 @@ class VenuesController extends Controller
 
     private VenueService $venueService;
     private VenueRepository $venueRepository;
-    private Location $locations;
-    private EventType $event_types;
+    private Collection $locations;
+    private Collection $event_types;
 
     public function __construct(VenueService $venueService, VenueRepository $venueRepository)
     {

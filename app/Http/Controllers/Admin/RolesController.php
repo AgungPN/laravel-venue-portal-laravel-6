@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Http\Requests\MassDestroyRoleRequest;
+use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 class RolesController extends Controller
@@ -18,7 +19,7 @@ class RolesController extends Controller
 
     private RoleService $roleService;
     private RoleRepository $roleRepository;
-    private Permission $permissions;
+    private Collection $permissions;
 
     public function __construct(RoleService $roleService, RoleRepository $roleRepository)
     {
@@ -44,9 +45,11 @@ class RolesController extends Controller
 
     public function store(StoreRoleRequest $request)
     {
-        $role = Role::create($request->all());
-        $role->permissions()->sync($request->input('permissions', []));
-
+        try {
+            $this->roleService->store($request);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
+        }
         return redirect()->route('admin.roles.index');
     }
 
@@ -64,9 +67,11 @@ class RolesController extends Controller
 
     public function update(UpdateRoleRequest $request, Role $role)
     {
-        $role->update($request->all());
-        $role->permissions()->sync($request->input('permissions', []));
-
+        try {
+            $this->roleService->update($request, $role);
+        } catch (\Throwable $th) {
+            abort($th->getCode(), $th->getMessage());
+        }
         return redirect()->route('admin.roles.index');
     }
 
@@ -90,8 +95,7 @@ class RolesController extends Controller
 
     public function massDestroy(MassDestroyRoleRequest $request)
     {
-        Role::whereIn('id', request('ids'))->delete();
-
+        $this->roleService->removeMany(request('ids'));
         return response(null, Response::HTTP_NO_CONTENT);
     }
 }

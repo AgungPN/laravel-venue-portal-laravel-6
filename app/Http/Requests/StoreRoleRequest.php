@@ -3,7 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Role;
-use Illuminate\Support\Facades\Gate;use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Http\FormRequest;
 use Symfony\Component\HttpFoundation\Response;
 
 class StoreRoleRequest extends FormRequest
