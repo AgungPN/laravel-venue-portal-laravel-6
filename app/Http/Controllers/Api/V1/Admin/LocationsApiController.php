@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Location;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Traits\MediaUploadingTrait;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
 use App\Http\Resources\Admin\LocationResource;
-use App\Location;
-use Gate;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Traits\MediaUploadingTrait;
 
 class LocationsApiController extends Controller
 {

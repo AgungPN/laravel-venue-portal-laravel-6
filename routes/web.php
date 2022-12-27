@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
 Route::get('/', 'HomeController@index');
 Route::get('event-type/{slug}', 'EventTypeController@index')->name('event_type');
 Route::get('location/{slug}', 'LocationController@index')->name('location');

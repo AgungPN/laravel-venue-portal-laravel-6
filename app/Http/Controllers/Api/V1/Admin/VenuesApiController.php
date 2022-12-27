@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Venue;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Traits\MediaUploadingTrait;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreVenueRequest;
 use App\Http\Requests\UpdateVenueRequest;
 use App\Http\Resources\Admin\VenueResource;
-use App\Venue;
-use Gate;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Traits\MediaUploadingTrait;
 
 class VenuesApiController extends Controller
 {

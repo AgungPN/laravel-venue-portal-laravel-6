@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Venue;
+use App\Location;
 use App\EventType;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Traits\MediaUploadingTrait;
-use App\Http\Requests\MassDestroyVenueRequest;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreVenueRequest;
 use App\Http\Requests\UpdateVenueRequest;
-use App\Location;
-use App\Venue;
-use Gate;
-use Illuminate\Http\Request;
+use App\Http\Requests\MassDestroyVenueRequest;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Controllers\Traits\MediaUploadingTrait;
 
 class VenuesController extends Controller
 {
