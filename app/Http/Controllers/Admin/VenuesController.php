@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Venue;
 use App\Location;
 use App\EventType;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreVenueRequest;

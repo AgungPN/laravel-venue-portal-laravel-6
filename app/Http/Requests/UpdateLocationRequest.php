@@ -3,8 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Location;
-use Gate;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;use Illuminate\Foundation\Http\FormRequest;
 use Symfony\Component\HttpFoundation\Response;
 
 class UpdateLocationRequest extends FormRequest

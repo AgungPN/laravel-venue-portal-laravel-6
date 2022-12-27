@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\EventType;
 use App\Location;
-use App\Venue;
+use App\Repositories\VenueRepository;
 
 class LocationController extends Controller
 {
@@ -13,12 +12,8 @@ class LocationController extends Controller
     {
         $location = Location::where('slug', $slug)->firstOrFail();
 
-        $venues = Venue::with('event_types')
-            ->where('location_id', $location->id)
-            ->latest()
-            ->paginate(9);
+        $venues = (new VenueRepository)->getListByLocation($location);
 
         return view('location', compact('venues', 'location'));
     }
-
 }

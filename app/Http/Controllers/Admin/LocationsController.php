@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Location;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreLocationRequest;
@@ -34,7 +33,7 @@ class LocationsController extends Controller
 
     public function store(StoreLocationRequest $request)
     {
-        $location = Location::create($request->all());
+        $location = Location::create($request->validated());
 
         if ($request->input('photo', false)) {
             $location->addMedia(storage_path('tmp/uploads/' . $request->input('photo')))->toMediaCollection('photo');
@@ -52,7 +51,7 @@ class LocationsController extends Controller
 
     public function update(UpdateLocationRequest $request, Location $location)
     {
-        $location->update($request->all());
+        $location->update($request->validated());
 
         if ($request->input('photo', false)) {
             if (!$location->photo || $request->input('photo') !== $location->photo->file_name) {

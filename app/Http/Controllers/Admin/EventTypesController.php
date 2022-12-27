@@ -33,7 +33,7 @@ class EventTypesController extends Controller
 
     public function store(StoreEventTypeRequest $request)
     {
-        $eventType = EventType::create($request->all());
+        $eventType = EventType::create($request->validated());
 
         if ($request->input('photo', false)) {
             $eventType->addMedia(storage_path('tmp/uploads/' . $request->input('photo')))->toMediaCollection('photo');
@@ -51,7 +51,7 @@ class EventTypesController extends Controller
 
     public function update(UpdateEventTypeRequest $request, EventType $eventType)
     {
-        $eventType->update($request->all());
+        $eventType->update($request->validated());
 
         if ($request->input('photo', false)) {
             if (!$eventType->photo || $request->input('photo') !== $eventType->photo->file_name) {
@@ -82,7 +82,7 @@ class EventTypesController extends Controller
 
     public function massDestroy(MassDestroyEventTypeRequest $request)
     {
-        EventType::whereIn('id', request('ids'))->delete();
+        EventType::whereIn('id', $request->ids)->delete();
 
         return response(null, Response::HTTP_NO_CONTENT);
     }

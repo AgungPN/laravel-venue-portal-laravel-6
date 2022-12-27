@@ -2,17 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\VenueRepository;
 use App\Venue;
 
 class VenueController extends Controller
 {
 
-    public function show($slug, $id) {
-        $venue = Venue::with('event_types', 'location')->where('slug', $slug)->where('id', $id)->firstOrFail();
+    private VenueRepository $venueRepository;
 
-        $relatedVenues = Venue::with('event_types')->where('location_id', $venue->location_id)->where('id', '!=', $venue->id)->take(3)->get();
+    public function __construct(VenueRepository $venueRepository)
+    {
+        $this->venueRepository = $venueRepository;
+    }
+
+    public function show($slug, $id)
+    {
+        $venue = $this->venueRepository->getOneBySlugAndId($slug, $id);
+
+        $relatedVenues = $this->venueRepository->takeByVenue($venue, 3);
 
         return view('venue', compact('venue', 'relatedVenues'));
     }
-
 }
